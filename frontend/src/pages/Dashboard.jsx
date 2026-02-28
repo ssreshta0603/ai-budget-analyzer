@@ -17,14 +17,18 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [error, setError] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const fetchDashboardData = async () => {
+        setLoading(true);
+        setError(false);
         try {
             const resp = await api.get('/transactions/dashboard');
             setData(resp.data);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
+            setError(true);
         } finally {
             setLoading(false);
         }
@@ -44,14 +48,26 @@ const Dashboard = () => {
             const resp = await api.post('/transactions', formData);
             setData(resp.data.dashboardUpdate);
             setIsModalOpen(false);
+            // Re-fetch to ensure everything is perfectly in sync
+            fetchDashboardData();
         } catch (error) {
             console.error('Error adding transaction:', error);
             alert('Failed to add transaction.');
         }
     };
 
-    if (loading || !data) {
-        return <div className="container" style={{ paddingTop: '80px', textAlign: 'center' }}>Loading your financial data...</div>;
+    if (loading) {
+        return <div className="container" style={{ paddingTop: '80px', textAlign: 'center' }}>Analyzing your financial data...</div>;
+    }
+
+    if (error || !data) {
+        return (
+            <div className="container" style={{ paddingTop: '80px', textAlign: 'center' }}>
+                <h3 className="text-critical mb-4">Failed to load dashboard</h3>
+                <p className="mb-8 text-secondary">There might be an issue with your data or the server.</p>
+                <button onClick={fetchDashboardData} className="btn btn-primary">Retry</button>
+            </div>
+        );
     }
 
     const { metrics, behavior, nudge } = data;

@@ -4,16 +4,14 @@ import { ArrowLeft, Activity, Calendar, Zap, HeartPulse } from 'lucide-react';
 import api from '../utils/api';
 
 const Insights = () => {
-    const [behavior, setBehavior] = useState(null);
+    const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchInsights = async () => {
             try {
-                // We're reusing the dashboard endpoint to get the behavior object
-                // In a fuller app, we'd have a dedicated detailed /insights endpoint
-                const resp = await api.get('/transactions/dashboard');
-                setBehavior(resp.data.behavior);
+                const resp = await api.get('/transactions/insights');
+                setData(resp.data);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -23,12 +21,12 @@ const Insights = () => {
         fetchInsights();
     }, []);
 
-    if (loading || !behavior) {
-        return <div className="container text-center" style={{ paddingTop: '80px' }}>Loading Insights...</div>;
+    if (loading || !data) {
+        return <div className="container text-center" style={{ paddingTop: '80px' }}>Analyzing your financial patterns...</div>;
     }
 
-    // Mocking computed insights that would come from an advanced backend analysis
-    const healthScore = behavior.personality === 'Weekend Splurger' ? 58 : 84;
+    const { behavior, metrics, stats, aiInsights } = data;
+    const healthScore = metrics.healthScore;
 
     return (
         <div className="container" style={{ padding: '40px 24px' }}>
@@ -36,7 +34,8 @@ const Insights = () => {
                 <ArrowLeft size={18} /> Back to Dashboard
             </Link>
 
-            <h1 className="mb-8">Behavioral Insights</h1>
+            <h1 className="mb-2">Your Financial Mindset</h1>
+            <p className="text-secondary mb-8">Personalized analysis based on this month's activity.</p>
 
             <div className="grid grid-cols-3 mb-8">
                 {/* Health Score Component */}
@@ -55,27 +54,27 @@ const Insights = () => {
                     <div style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                             <span>Budget Discipline</span>
-                            <span className={healthScore > 70 ? 'text-safe' : 'text-warning'}>{healthScore > 70 ? 'High' : 'Moderate'}</span>
+                            <span className={healthScore > 70 ? 'text-safe' : 'text-warning'}>{healthScore > 85 ? 'Excellent' : (healthScore > 70 ? 'Good' : 'Needs Work')}</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: `${healthScore > 70 ? 80 : 50}%`, height: '100%', backgroundColor: healthScore > 70 ? 'var(--accent-safe)' : 'var(--accent-warning)' }}></div>
+                            <div style={{ width: `${healthScore}%`, height: '100%', backgroundColor: healthScore > 70 ? 'var(--accent-safe)' : 'var(--accent-warning)' }}></div>
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span>Savings Ratio (Projected)</span>
-                            <span className="text-safe">Excellent</span>
+                            <span>Spending Stability</span>
+                            <span className={stats?.volatility < 1000 ? 'text-safe' : 'text-warning'}>{stats?.volatility < 1000 ? 'High' : 'Moderate'}</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: '90%', height: '100%', backgroundColor: 'var(--accent-safe)' }}></div>
+                            <div style={{ width: `${Math.max(30, 100 - (stats?.volatility / 50))}%`, height: '100%', backgroundColor: stats?.volatility < 1000 ? 'var(--accent-safe)' : 'var(--accent-warning)' }}></div>
                         </div>
                     </div>
 
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span>Stability</span>
-                            <span className="text-safe">Stable</span>
+                            <span>Savings Potential</span>
+                            <span className="text-safe">Analyzing...</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
                             <div style={{ width: '75%', height: '100%', backgroundColor: 'var(--accent-safe)' }}></div>
@@ -84,38 +83,73 @@ const Insights = () => {
                 </div>
             </div>
 
-            <h3 className="mb-4">Pattern Detection</h3>
-            <div className="grid grid-cols-3">
-                <div className="card">
+            <div className="mb-4" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3>AI Behavioral Analysis</h3>
+                <span className="badge badge-safe">LIVE</span>
+            </div>
+
+            <div className="grid grid-cols-3 mb-8">
+                <div className="card" style={{ borderLeft: '4px solid var(--accent-warning)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                         <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-warning)' }}>
                             <Calendar size={24} />
                         </div>
-                        <h4 className="mb-0">Weekend Bias</h4>
+                        <h4 className="mb-0">Habit Detection</h4>
                     </div>
-                    <p style={{ fontSize: '0.95rem' }}>{behavior.insights}</p>
+                    <p style={{ fontSize: '0.95rem' }}>{aiInsights.habitInsight}</p>
                 </div>
 
-                <div className="card">
+                <div className="card" style={{ borderLeft: '4px solid var(--accent-safe)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                         <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-safe)' }}>
                             <Zap size={24} />
                         </div>
-                        <h4 className="mb-0">Habit Detection</h4>
+                        <h4 className="mb-0">Actionable Tip</h4>
                     </div>
-                    <p style={{ fontSize: '0.95rem' }}>You frequent <strong>Swiggy</strong> approximately 3 times a week. Bulk cooking on Sundays might save you ₹4,500/month.</p>
+                    <p style={{ fontSize: '0.95rem' }}>{aiInsights.actionableTip}</p>
                 </div>
 
-                <div className="card">
+                <div className="card" style={{ borderLeft: '4px solid var(--accent-critical)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                         <div style={{ padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-critical)' }}>
                             <Activity size={24} />
                         </div>
                         <h4 className="mb-0">Volatility Analysis</h4>
                     </div>
-                    <p style={{ fontSize: '0.95rem' }}>Your daily spending variance is high. Try flattening your expenses to avoid end-of-month cash crunches.</p>
+                    <p style={{ fontSize: '0.95rem' }}>{aiInsights.volatilityInsight}</p>
                 </div>
             </div>
+
+            {stats && (
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="card">
+                        <h3 className="mb-4">Top Merchants This Month</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {stats.topMerchants.map((m, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)' }}>
+                                    <span style={{ fontWeight: '600' }}>{m.name}</span>
+                                    <span className="text-safe">₹{m.amount.toLocaleString()}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h3 className="mb-4">Spending Distribution</h3>
+                        <div style={{ padding: '20px', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', height: '40px', borderRadius: '20px', overflow: 'hidden', marginBottom: '20px' }}>
+                                <div style={{ width: `${stats.weekendVsWeekday.weekend}%`, backgroundColor: 'var(--accent-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '0.8rem', fontWeight: '700' }}>
+                                    {stats.weekendVsWeekday.weekend}% Weekend
+                                </div>
+                                <div style={{ width: `${stats.weekendVsWeekday.weekday}%`, backgroundColor: 'var(--accent-safe)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '0.8rem', fontWeight: '700' }}>
+                                    {stats.weekendVsWeekday.weekday}% Weekday
+                                </div>
+                            </div>
+                            <p className="text-secondary">Your favorite day to spend is <strong>{stats.favoriteDay}</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

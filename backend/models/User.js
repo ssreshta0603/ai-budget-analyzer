@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
     alertThreshold: { type: Number, default: 80 },
     coachStyle: { type: String, enum: ['Friendly', 'Balanced', 'Strict', 'Sarcastic'], default: 'Balanced' },
     onboardingComplete: { type: Boolean, default: false },
+    nudgeHistory: { type: [String], default: [] }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

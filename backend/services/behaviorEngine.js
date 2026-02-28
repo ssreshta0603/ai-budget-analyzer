@@ -21,6 +21,7 @@ const detectBehaviors = async (userId) => {
     let totalSpend = 0;
 
     transactions.forEach(t => {
+        if (!t.date || isNaN(new Date(t.date).getTime())) return;
         totalSpend += t.amount;
         const day = new Date(t.date).getDay();
         if (day === 0 || day === 5 || day === 6) { // Fri, Sat, Sun
